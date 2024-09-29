@@ -1,6 +1,9 @@
 using Clean.Architecture.Inventory.Application.Behaviors;
 using Clean.Architecture.Inventory.Application.Commands;
+using Clean.Architecture.Inventory.Application.Handlers;
 using Clean.Architecture.Inventory.Application.Interfaces;
+using Clean.Architecture.Inventory.Application.Queries;
+using Clean.Architecture.Inventory.Domain.Entities;
 using Clean.Architecture.Inventory.Persistence;
 using Clean.Architecture.Inventory.Persistence.Repositories;
 using FluentValidation.AspNetCore;
@@ -31,10 +34,24 @@ builder.Services.AddScoped<IInventoryTransactionRepository, InventoryTransaction
 builder.Services.AddScoped<IErrorLogRepository, ErrorLogRepository>();
 
 // Registrar MediatR e Handlers com ServiceFactory
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 // Registrar Behaviors
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ErrorLoggingBehavior<,>));
+
+builder.Services.AddTransient<IRequestHandler<CreateProductCommand, int>, CreateProductCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<CreateInventoryTransactionCommand, int>, CreateInventoryTransactionCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteProductCommand, Unit>, DeleteProductCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateProductCommand, Unit>, UpdateProductCommandHandler>();
+
+builder.Services.AddTransient<IRequestHandler<GetAllProductsQuery, IEnumerable<Product>>, GetAllProductsQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<GetInventoryTransactionByIdQuery, InventoryTransaction>, GetInventoryTransactionByIdQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<GetProductByIdQuery, Product>, GetProductByIdQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<GetTodayTransactionsQuery, IEnumerable<InventoryTransaction>>, GetTodayTransactionsQueryHandler>();
+
+
+
 
 // Adicionar suporte a validação com FluentValidation
 builder.Services.AddControllers()
